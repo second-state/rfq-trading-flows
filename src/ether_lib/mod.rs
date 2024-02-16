@@ -3,7 +3,7 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::str::FromStr;
 use ethers_signers::{LocalWallet, Signer};
-use ethers_core::types::{NameOrAddress, Bytes, U256, U64, TransactionRequest, transaction::eip2718::TypedTransaction};
+use ethers_core::types::{NameOrAddress, Bytes, U256, U64, TransactionRequest, transaction::eip2718::TypedTransaction, H160};
 use ethers_core::abi::{Abi, Function, Token};
 use ethers_core::utils::hex;
 
@@ -21,6 +21,20 @@ pub fn create_contract_call_data(name: &str, tokens: Vec<Token>) -> Result<Bytes
     let data = function.encode_input(&tokens).unwrap();
 
     Ok(Bytes::from(data))
+}
+
+pub fn decode_output(name: &str, data: &[u8]) -> Result<Vec<Token> > {
+
+	let contract_abi: &str = include_str!("../abi.json");
+    let abi: Abi = serde_json::from_str(&contract_abi).unwrap();
+    let function: &Function = abi
+        .functions()
+        .find(|&f| f.name == name)
+        .ok_or("Function not found in ABI")?;
+	
+	let data = function.decode_output(data).unwrap();
+	
+	Ok(data)
 }
 
 pub async fn wrap_transaction(rpc_node_url: &str, chain_id: u64, wallet: LocalWallet, address_to: NameOrAddress, data: Bytes, value: U256) -> Result<String> {
@@ -102,10 +116,44 @@ pub async fn get_log(rpc_node_url: &str, address: &str, topic: Value) -> Result<
 	Ok(serde_json::from_str(&result).unwrap())
 }
 
-pub async fn get_latest_log(rpc_node_url: &str, address: &str, topic: Value) -> Result<Value>{
-	let params = json!([{"address": address, "fromBlock": "latest", "topics":topic}]);
+pub async fn get_log_from(rpc_node_url: &str, address: &str, topic: Value, from_block: &str, to_block: &str) -> Result<Value>{
+	let params = json!([{"address": address, "fromBlock": from_block, "toBlock": to_block,"topics":topic}]);
 	let result = json_rpc(rpc_node_url, "eth_getLogs", params).await.expect("Failed to send json.");
 	Ok(serde_json::from_str(&result).unwrap())
+}
+
+pub async fn get_block_number(rpc_node_url: &str) -> Result<U256>{
+	let params = json!([]);
+	let result = json_rpc(rpc_node_url, "eth_blockNumber", params).await.expect("Failed to send json.");
+	Ok(U256::from_str(&result).unwrap())
+}
+
+pub async fn eth_get_transaction_receipt(rpc_node_url: &str, hash: &str) -> Result<Value>{
+	let params = json!([hash]);
+	let result = json_rpc(rpc_node_url, "eth_getTransactionReceipt", params).await.expect("Failed to send json.");
+	Ok(serde_json::from_str(&result).unwrap())
+}
+
+pub async fn wait_receipt(rpc_node_url: &str, hash: &str) -> Result<Value> {
+	let mut result = eth_get_transaction_receipt(rpc_node_url, hash).await.unwrap();
+	while result.is_null() {
+		tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+		result = eth_get_transaction_receipt(rpc_node_url, hash).await.unwrap();
+	}
+	Ok(result)
+}
+
+pub async fn call_function(rpc_node_url: &str, name: &str, contract_call_params: Vec<Token>, contract_address: &str) -> Result<String>{
+	let data = create_contract_call_data(name, contract_call_params).unwrap();
+	Ok(eth_call(&rpc_node_url, "0x0000000000000000000000000000000000000000", contract_address, format!("{:}", data).as_str()).await.unwrap())
+}
+
+
+pub async fn call_function_and_wait(rpc_node_url: &str, chain_id: u64, wallet: LocalWallet, name: &str, contract_call_params: Vec<Token>, contract_address: &str) -> Result<Value>{
+	let data = create_contract_call_data(name, contract_call_params).unwrap();
+	let tx_params = json!([wrap_transaction(&rpc_node_url, chain_id, wallet, H160::from_str(contract_address).unwrap().into(), data, U256::from(0)).await.unwrap().as_str()]);
+	let hash =json_rpc(&rpc_node_url, "eth_sendRawTransaction", tx_params).await.expect("Failed to send raw transaction.");
+	Ok(wait_receipt(&rpc_node_url, &hash).await.unwrap())
 }
 
 pub async fn json_rpc(url: &str, method: &str, params: Value) -> Result<String> {
