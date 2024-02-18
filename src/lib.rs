@@ -5,7 +5,7 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::str::FromStr;
 use ethers_signers::{LocalWallet, Signer};
-use ethers_core::types::{U256, H160};
+use ethers_core::types::{H160, U256};
 use ethers_core::abi::Token;
 use store_flows;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -52,10 +52,8 @@ async fn handler(_headers: Vec<(String, String)>, _subpath: String, _qry: HashMa
     }
 }
 
-fn init_rpc(path: &str, _qry: &HashMap<String, Value>) -> (String, u64, String, LocalWallet){
+fn init_rpc(_qry: &HashMap<String, Value>) -> (String, u64, String, LocalWallet){
     logger::init();
-    log::info!("{} Query -- {:?}", path, _qry);
-    
     let rpc_node_url = std::env::var("RPC_NODE_URL").unwrap_or("https://mainnet.cybermiles.io".to_string());
     let chain_id = std::env::var("CHAIN_ID").unwrap_or("18".to_string()).parse::<u64>().unwrap_or(18u64);
     let contract_address = std::env::var("CONTRACT_ADDRESS").unwrap().to_string();
@@ -88,8 +86,29 @@ fn init_variable() -> (U256, U256, U256, U256, Vec<U256>, String, String, u128, 
     (quantity, exchange_quantity, profix_spread, last_block_number, request_list, base, quote, min_base_quantity, max_base_quantity, min_quote_quantity, max_quote_quantity)
 }
 
+fn store_state(last_block_number: Option<U256>, request_list: Option<Vec<U256>>, now_time: Option<U256>, response_id: Option<U256>, request_id: Option<U256>, is_lock: Option<bool>) {
+    if let Some(last_block_number) = last_block_number {
+        store_flows::set("last_block_number", json!(last_block_number), None);
+    }
+    if let Some(request_list) = request_list{
+        store_flows::set("request_list", json!(request_list), None);
+    }
+    if let Some(now_time) = now_time{
+        store_flows::set("last_time", json!(now_time), None);
+    }
+    if let Some(response_id) = response_id{
+        store_flows::set("response_id", json!(response_id), None);
+    }
+    if let Some(request_id) = request_id{
+        store_flows::set("request_id", json!(request_id), None);
+    }
+    if let Some(is_lock) = is_lock{
+        store_flows::set("is_lock", json!(is_lock), None);
+    }
+}
+
 async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, _body: Vec<u8>){
-    let (rpc_node_url, chain_id, contract_address, wallet) = init_rpc("submit_request", &_qry);
+    let (rpc_node_url, chain_id, contract_address, wallet) = init_rpc(&_qry);
 
 	let (quntity, exchange_quantity,  profit_spread, last_block_number, mut request_list, base, quote, _, _, _, _) = init_variable();
 
@@ -152,17 +171,19 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
 		}
 
 		if accept {
-			let contract_call_params = vec![Token::Uint(request_id.into()), Token::Uint(response_id.into())];
-			let _ = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "acceptBid", contract_call_params, &contract_address).await;
+			let accept_bid_params = vec![Token::Uint(request_id.into()), Token::Uint(response_id.into())];
+			let _ = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "acceptBid", accept_bid_params, &contract_address).await;
 			request_list.remove(request_idx);
 		}
 		
 		// Create reverse request
 		if token_out == quote && token_in == base && accept{
-			let contract_call_params = vec![Token::Uint(request_id.into())];
-			let _ = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "withdraw", contract_call_params, &contract_address).await;
-			let contract_call_params = vec![Token::Address(H160::from_str(&token_in).unwrap()), Token::Address(H160::from_str(&token_out).unwrap()), Token::Uint((amount_in).into()), Token::Uint(0.into())];
-			let result = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "submitRequest", contract_call_params, &contract_address).await.unwrap();
+			let withdraw_params = vec![Token::Uint(request_id.into())];
+			let _ = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "withdraw", withdraw_params, &contract_address).await;
+            let approve_params = vec![Token::Address(H160::from_str(&contract_address).unwrap()), Token::Uint((amount_in).into())];
+            let _ = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "approve", approve_params, &quote).await.unwrap();
+			let submit_request_params = vec![Token::Address(H160::from_str(&token_in).unwrap()), Token::Address(H160::from_str(&token_out).unwrap()), Token::Uint((amount_in).into()), Token::Uint(0.into())];
+			let result = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "submitRequest", submit_request_params, &contract_address).await.unwrap();
 			let new_request_id = U256::from_str(&(result["logs"][0]["topics"][2].to_string()).trim_matches('"')[2..]).unwrap();
 			request_list.push(new_request_id);
 		}
@@ -170,19 +191,20 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
 
 	// Create request used remaining token
     loop {
-        let contract_call_params = vec![Token::Address(wallet.address().into())];
-        let balance = U256::from_str(call_function(&rpc_node_url, "balanceOf", contract_call_params, &quote).await.unwrap().as_str()).unwrap();
+        let balance_of_params = vec![Token::Address(wallet.address().into())];
+        let balance = U256::from_str(call_function(&rpc_node_url, "balanceOf", balance_of_params, &quote).await.unwrap().as_str()).unwrap();
         if balance < quntity {
             break;
         }
-        let contract_call_params = vec![Token::Address(H160::from_str(&quote).unwrap()), Token::Address(H160::from_str(&base).unwrap()), Token::Uint((exchange_quantity).into()), Token::Uint(0.into())];
-        let result = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "submitRequest", contract_call_params, &contract_address).await.unwrap();
+        let approve_params = vec![Token::Address(H160::from_str(&contract_address).unwrap()), Token::Uint((exchange_quantity).into())];
+        let _ = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "approve", approve_params, &base).await.unwrap();
+        let submit_request_params = vec![Token::Address(H160::from_str(&quote).unwrap()), Token::Address(H160::from_str(&base).unwrap()), Token::Uint((exchange_quantity).into()), Token::Uint(0.into())];
+        let result = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "submitRequest", submit_request_params, &contract_address).await.unwrap();
         let new_request_id = U256::from_str(&(result["logs"][0]["topics"][2].to_string()).trim_matches('"')[2..]).unwrap();
         request_list.push(new_request_id);
     }
     
-    store_flows::set("last_block_number", json!(last_block_number), None);
-    store_flows::set("request_list", json!(request_list), None);
+    store_state(Some(now_block_number), Some(request_list), None, None, None, None);
 
     send_response(
         200,
@@ -192,7 +214,7 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
 }
 
 async fn random_response(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, _body: Vec<u8>){
-    let (rpc_node_url, chain_id, contract_address, wallet) = init_rpc("submit_request", &_qry);
+    let (rpc_node_url, chain_id, contract_address, wallet) = init_rpc(&_qry);
 	let (_, _,  _, _,
          _, base, quote,
           min_base_quantity, max_base_quantity, min_quote_quantity, max_quote_quantity) = init_variable();
@@ -205,11 +227,7 @@ async fn random_response(_headers: Vec<(String, String)>, _qry: HashMap<String, 
     let cooling_time = U256::from_str(std::env::var("COOLING_TIME").unwrap_or("300".to_string()).as_str()).unwrap();
     let last_time = U256::from_str(store_flows::get("last_time").unwrap().as_str().unwrap()).unwrap();
     if now_time - last_time <= cooling_time {
-        send_response(
-            200,
-            vec![(String::from("content-type"), String::from("text/html"))],
-            "No action!".to_string().into_bytes().to_vec(),
-        );
+        println!("Waiting accept");
         return;
     }
     // withdraw old response
@@ -221,26 +239,22 @@ async fn random_response(_headers: Vec<(String, String)>, _qry: HashMap<String, 
         if let Some(now_request) = response_log.get(0) {
             let buyer = format!("0x{}", &now_request["data"].as_str().unwrap()[26..66]);
             if buyer == format!("{:}", wallet.address()) {
-                let contract_call_params = vec![Token::Uint(request_id.into()), Token::Uint(response_id.into())];
-                let _ = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "withdraw", contract_call_params, &contract_address).await;
+                let withdraw_params = vec![Token::Uint(request_id.into()), Token::Uint(response_id.into())];
+                let _ = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "withdraw", withdraw_params, &contract_address).await;
                 is_lock = false;
             }
         } 
     }
 
     // create new response
-    let contract_call_params = vec![];
-    let request_length = U256::from_str(call_function(&rpc_node_url, "getRequestLength", contract_call_params, &contract_address).await.unwrap().as_str()).unwrap();
+    let get_request_length_params = vec![];
+    let request_length = U256::from_str(call_function(&rpc_node_url, "getRequestLength", get_request_length_params, &contract_address).await.unwrap().as_str()).unwrap();
     if request_length == U256::from(0) {
-        send_response(
-            200,
-            vec![(String::from("content-type"), String::from("text/html"))],
-            "No action!!".to_string().into_bytes().to_vec(),
-        );
+        println!("No request");
         return;
     }
-    let contract_call_params = vec![Token::Uint((request_length - 1).into())];
-    if let Ok(now_request) = call_function(&rpc_node_url, "getRequest", contract_call_params, &contract_address).await {
+    let get_request_params = vec![Token::Uint((request_length - 1).into())];
+    if let Ok(now_request) = call_function(&rpc_node_url, "getRequest", get_request_params, &contract_address).await {
         let decode_result = decode_output("getRequest", &hex::decode(now_request).unwrap())
         .unwrap()[0]
         .clone().into_tuple()
@@ -253,21 +267,26 @@ async fn random_response(_headers: Vec<(String, String)>, _qry: HashMap<String, 
         if !finish {
             let mut rng = rand::thread_rng();
             let mut exchange_quantity = 0;
-            let contract_call_params = vec![Token::Address(wallet.address().into())];
+			let mut token_address = String::from("");
+            let balance_of_params = vec![Token::Address(wallet.address().into())];
             if token_out == H160::from_str(&base).unwrap() {
-                let base_balance = U256::from_str(call_function(&rpc_node_url, "balanceOf", contract_call_params.clone(), &base).await.unwrap().as_str()).unwrap();
+				token_address = base.clone();
+                let base_balance = U256::from_str(call_function(&rpc_node_url, "balanceOf", balance_of_params.clone(), &base).await.unwrap().as_str()).unwrap();
                 if base_balance > U256::from(min_base_quantity) {
-                    exchange_quantity = rng.gen_range(min_base_quantity..cmp::min(base_balance.as_u128(), max_base_quantity));
+					exchange_quantity = rng.gen_range(min_base_quantity..cmp::min(base_balance.as_u128(), max_base_quantity));
                 }
             }else if token_out == H160::from_str(&quote).unwrap() {
-                let quote_balance = U256::from_str(call_function(&rpc_node_url, "balanceOf", contract_call_params.clone(), &quote).await.unwrap().as_str()).unwrap();
+				token_address = quote.clone();
+				let quote_balance = U256::from_str(call_function(&rpc_node_url, "balanceOf", balance_of_params.clone(), &quote).await.unwrap().as_str()).unwrap();
                 if quote_balance > U256::from(min_quote_quantity) {
-                    exchange_quantity = rng.gen_range(min_quote_quantity..cmp::min(quote_balance.as_u128(), max_quote_quantity));
+					exchange_quantity = rng.gen_range(min_quote_quantity..cmp::min(quote_balance.as_u128(), max_quote_quantity));
                 }
             }
             if exchange_quantity != 0 {
-                let contract_call_params = vec![Token::Uint((request_length - 1).into()), Token::Uint((exchange_quantity).into()), Token::Uint((cmp::max(U256::from(0), cooling_time - 10)).into())];
-                let result = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "submitResponse", contract_call_params, &contract_address).await.unwrap();
+                let approve_params = vec![Token::Address(H160::from_str(&contract_address).unwrap()), Token::Uint((exchange_quantity).into())];
+                let _ = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "approve", approve_params, &token_address).await.unwrap();
+                let submit_response_params = vec![Token::Uint((request_length - 1).into()), Token::Uint((exchange_quantity).into()), Token::Uint((cmp::max(U256::from(0), cooling_time - 10)).into())];
+                let result = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "submitResponse", submit_response_params, &contract_address).await.unwrap();
                 let new_response_id = U256::from_str(&(result["logs"][0]["topics"][1].to_string()).trim_matches('"')[2..]).unwrap();
                 let new_request_id = U256::from_str(&(result["logs"][0]["topics"][2].to_string()).trim_matches('"')[2..]).unwrap();
                 request_id = new_request_id;
@@ -276,15 +295,15 @@ async fn random_response(_headers: Vec<(String, String)>, _qry: HashMap<String, 
             }
         }
     }
+    
     now_time = SystemTime::now()
     .duration_since(UNIX_EPOCH)
     .unwrap()
     .as_secs()
     .into();
-    store_flows::set("last_time", json!(now_time), None);
-    store_flows::set("response_id", json!(response_id), None);
-    store_flows::set("request_id", json!(request_id), None);
-    store_flows::set("is_lock", json!(is_lock), None);
+
+    store_state(None, None, Some(now_time), Some(response_id), Some(request_id), Some(is_lock));
+
     send_response(
         200,
         vec![(String::from("content-type"), String::from("text/html"))],
