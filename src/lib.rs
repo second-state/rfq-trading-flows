@@ -68,7 +68,7 @@ fn init_rpc(_qry: &HashMap<String, Value>) -> (String, u64, String, LocalWallet)
     return (rpc_node_url, chain_id, contract_address, wallet);
 }
 
-fn init_variable() -> (U256, U256, U256, U256, Vec<U256>, String, String, u128, u128, u128, u128) {
+fn init_variable() -> (U256, U256, U256, U256, Vec<U256>, String, String, u128, u128, u128, u128, U256, U256, bool, U256, U256) {
     let quantity = std::env::var("QUANTITY").unwrap_or("100".to_string()).parse::<U256>().unwrap();
     let exchange_quantity = std::env::var("EXCHANGE_QUANTITY").unwrap_or("99".to_string()).parse::<U256>().unwrap();
     let profix_spread = std::env::var("PROFIX_SPREAD").unwrap_or("1".to_string()).parse::<U256>().unwrap();
@@ -83,7 +83,15 @@ fn init_variable() -> (U256, U256, U256, U256, Vec<U256>, String, String, u128, 
     let max_base_quantity = std::env::var("MAX_BASE_QUANTITY").unwrap_or("102".to_string()).parse::<u128>().unwrap();
     let min_quote_quantity = std::env::var("MIN_QUOTE_QUANTITY").unwrap_or("98".to_string()).parse::<u128>().unwrap();
     let max_quote_quantity = std::env::var("MAX_QUOTE_QUANTITY").unwrap_or("102".to_string()).parse::<u128>().unwrap();
-    (quantity, exchange_quantity, profix_spread, last_block_number, request_list, base, quote, min_base_quantity, max_base_quantity, min_quote_quantity, max_quote_quantity)
+    let cooling_time = U256::from_str(std::env::var("COOLING_TIME").unwrap_or("300".to_string()).as_str()).unwrap();
+    let last_time = U256::from_str(store_flows::get("last_time").unwrap().as_str().unwrap()).unwrap();
+    let is_lock = store_flows::get("is_lock").unwrap_or(json!(false)).as_bool().unwrap();
+    let request_id = U256::from_str(store_flows::get("request_id").unwrap_or(json!(0)).as_str().unwrap()).unwrap();
+    let response_id = U256::from_str(store_flows::get("response_id").unwrap_or(json!(0)).as_str().unwrap()).unwrap();
+    (quantity, exchange_quantity, profix_spread, last_block_number,
+    request_list, base, quote, min_base_quantity, max_base_quantity,
+    min_quote_quantity, max_quote_quantity, cooling_time, last_time,
+    is_lock, request_id, response_id)
 }
 
 fn store_state(last_block_number: Option<U256>, request_list: Option<Vec<U256>>, now_time: Option<U256>, response_id: Option<U256>, request_id: Option<U256>, is_lock: Option<bool>) {
@@ -110,7 +118,8 @@ fn store_state(last_block_number: Option<U256>, request_list: Option<Vec<U256>>,
 async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, _body: Vec<u8>){
     let (rpc_node_url, chain_id, contract_address, wallet) = init_rpc(&_qry);
 
-	let (quntity, exchange_quantity,  profit_spread, last_block_number, mut request_list, base, quote, _, _, _, _) = init_variable();
+	let (quntity, exchange_quantity,  profit_spread, last_block_number, mut request_list, base, quote,
+         _, _, _, _, _, _, _, _, _) = init_variable();
 
 	let now_block_number = get_block_number(&rpc_node_url).await.unwrap();
 	println!("{}", format!("{:}", wallet.address()));
@@ -215,30 +224,27 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
 
 async fn random_response(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, _body: Vec<u8>){
     let (rpc_node_url, chain_id, contract_address, wallet) = init_rpc(&_qry);
-	let (_, _,  _, _,
-         _, base, quote,
-          min_base_quantity, max_base_quantity, min_quote_quantity, max_quote_quantity) = init_variable();
+	let (_, _,  _, _, _,
+         base, quote,
+          min_base_quantity, max_base_quantity, min_quote_quantity, max_quote_quantity,
+           cooling_time, last_time, mut is_lock, mut request_id, mut response_id) = init_variable();
+    
     let mut now_time:U256 = SystemTime::now()
         .duration_since(UNIX_EPOCH)
 		.unwrap()
 		.as_secs()
 		.into();
     
-    let cooling_time = U256::from_str(std::env::var("COOLING_TIME").unwrap_or("300".to_string()).as_str()).unwrap();
-    let last_time = U256::from_str(store_flows::get("last_time").unwrap().as_str().unwrap()).unwrap();
     if now_time - last_time <= cooling_time {
         println!("Waiting accept");
         return;
     }
     // withdraw old response
-    let mut is_lock = store_flows::get("is_lock").unwrap_or(json!(false)).as_bool().unwrap();
-    let mut request_id = U256::from_str(store_flows::get("request_id").unwrap_or(json!(0)).as_str().unwrap()).unwrap();
-    let mut response_id = U256::from_str(store_flows::get("response_id").unwrap_or(json!(0)).as_str().unwrap()).unwrap();
     let response_log = get_log(&rpc_node_url, &contract_address, json!(["0x04a02541703318cd8f9e95f53f8a3e93327acfef4a41ba01dfd2bdd5623cfb6a", response_id.to_string().as_str(), request_id.to_string().as_str()]),).await.unwrap();
     if is_lock {
         if let Some(now_request) = response_log.get(0) {
             let buyer = format!("0x{}", &now_request["data"].as_str().unwrap()[26..66]);
-            if buyer == format!("{:}", wallet.address()) {
+            if buyer == format!("{:?}", wallet.address()) {
                 let withdraw_params = vec![Token::Uint(request_id.into()), Token::Uint(response_id.into())];
                 let _ = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "withdraw", withdraw_params, &contract_address).await;
                 is_lock = false;
@@ -259,7 +265,7 @@ async fn random_response(_headers: Vec<(String, String)>, _qry: HashMap<String, 
         .unwrap()[0]
         .clone().into_tuple()
         .unwrap();
-        let (_owner, token_out, _token_in, _lock_amount, _deposit_size, _expire_time, finish, _buyer) =
+        let (_owner, _token_out, token_in, _lock_amount, _deposit_size, _expire_time, finish, _buyer) =
         (decode_result[0].clone().into_address().unwrap(), decode_result[1].clone().into_address().unwrap(),
         decode_result[2].clone().into_address().unwrap(), decode_result[3].clone().into_uint().unwrap(),
         decode_result[4].clone().into_uint().unwrap(), decode_result[5].clone().into_uint().unwrap(),
@@ -269,13 +275,13 @@ async fn random_response(_headers: Vec<(String, String)>, _qry: HashMap<String, 
             let mut exchange_quantity = 0;
 			let mut token_address = String::from("");
             let balance_of_params = vec![Token::Address(wallet.address().into())];
-            if token_out == H160::from_str(&base).unwrap() {
+            if token_in == H160::from_str(&base).unwrap() {
 				token_address = base.clone();
                 let base_balance = U256::from_str(call_function(&rpc_node_url, "balanceOf", balance_of_params.clone(), &base).await.unwrap().as_str()).unwrap();
                 if base_balance > U256::from(min_base_quantity) {
 					exchange_quantity = rng.gen_range(min_base_quantity..cmp::min(base_balance.as_u128(), max_base_quantity));
                 }
-            }else if token_out == H160::from_str(&quote).unwrap() {
+            }else if token_in == H160::from_str(&quote).unwrap() {
 				token_address = quote.clone();
 				let quote_balance = U256::from_str(call_function(&rpc_node_url, "balanceOf", balance_of_params.clone(), &quote).await.unwrap().as_str()).unwrap();
                 if quote_balance > U256::from(min_quote_quantity) {
@@ -287,11 +293,18 @@ async fn random_response(_headers: Vec<(String, String)>, _qry: HashMap<String, 
                 let _ = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "approve", approve_params, &token_address).await.unwrap();
                 let submit_response_params = vec![Token::Uint((request_length - 1).into()), Token::Uint((exchange_quantity).into()), Token::Uint((cmp::max(U256::from(0), cooling_time - 10)).into())];
                 let result = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "submitResponse", submit_response_params, &contract_address).await.unwrap();
-                let new_response_id = U256::from_str(&(result["logs"][0]["topics"][1].to_string()).trim_matches('"')[2..]).unwrap();
-                let new_request_id = U256::from_str(&(result["logs"][0]["topics"][2].to_string()).trim_matches('"')[2..]).unwrap();
-                request_id = new_request_id;
-                response_id = new_response_id;
-                is_lock = true;
+                for idx in 0..result["logs"].as_array().unwrap().len(){
+                    if result["logs"][idx]["topics"][0].to_string().trim_matches('"') == "0x04a02541703318cd8f9e95f53f8a3e93327acfef4a41ba01dfd2bdd5623cfb6a" {
+                        let new_response_id = U256::from_str(&(result["logs"][idx]["topics"][1].to_string()).trim_matches('"')[2..]).unwrap();
+                        let new_request_id = U256::from_str(&(result["logs"][idx]["topics"][2].to_string()).trim_matches('"')[2..]).unwrap();
+                        request_id = new_request_id;
+                        response_id = new_response_id;
+                        is_lock = true;
+                        break;
+                    }else{
+                        continue;
+                    }
+                }
             }
         }
     }
