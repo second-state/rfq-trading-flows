@@ -1,4 +1,4 @@
-use webhook_flows::{create_endpoint, request_handler, send_response, route::{post, route, RouteError, Router}};
+use webhook_flows::{create_endpoint, request_handler, send_response, route::{get, post, route, RouteError, Router}};
 use flowsnet_platform_sdk::logger;
 use serde_json::Value;
 use serde_json::json;
@@ -40,6 +40,13 @@ async fn handler(_headers: Vec<(String, String)>, _subpath: String, _qry: HashMa
         )
         .unwrap();
 
+    router
+        .insert(
+            "/reset-state",
+            vec![get(reset_state)],
+        )
+        .unwrap();
+
     if let Err(e) = route(router).await {
         match e {
             RouteError::NotFound => {
@@ -72,7 +79,7 @@ fn init_variable() -> (U256, U256, U256, U256, Vec<U256>, String, String, u128, 
     let quantity = std::env::var("QUANTITY").unwrap_or("100".to_string()).parse::<U256>().unwrap();
     let exchange_quantity = std::env::var("EXCHANGE_QUANTITY").unwrap_or("99".to_string()).parse::<U256>().unwrap();
     let profit_spread = std::env::var("PROFIT_SPREAD").unwrap_or("1".to_string()).parse::<U256>().unwrap();
-    let last_block_number = U256::from_str(store_flows::get("last_block_number").unwrap_or(json!(0)).as_str().unwrap()).unwrap();
+    let last_block_number = U256::from_str(store_flows::get("last_block_number").unwrap_or(json!("0")).as_str().unwrap()).unwrap();
     let request_list = store_flows::get("request_list").unwrap_or(json!([])).as_array().unwrap().clone()
     .iter()
     .map(|value| U256::from_str(value.as_str().unwrap()).unwrap())
@@ -84,10 +91,10 @@ fn init_variable() -> (U256, U256, U256, U256, Vec<U256>, String, String, u128, 
     let min_quote_quantity = std::env::var("MIN_QUOTE_QUANTITY").unwrap_or("98".to_string()).parse::<u128>().unwrap();
     let max_quote_quantity = std::env::var("MAX_QUOTE_QUANTITY").unwrap_or("102".to_string()).parse::<u128>().unwrap();
     let cooling_time = U256::from_dec_str(std::env::var("COOLING_TIME").unwrap_or("300".to_string()).as_str()).unwrap();
-    let last_time = U256::from_str(store_flows::get("last_time").unwrap_or(Value::from(0)).as_str().unwrap()).unwrap();
+    let last_time = U256::from_str(store_flows::get("last_time").unwrap_or(Value::from("0")).as_str().unwrap()).unwrap();
     let is_lock = store_flows::get("is_lock").unwrap_or(json!(false)).as_bool().unwrap();
-    let request_id = U256::from_str(store_flows::get("request_id").unwrap_or(json!(0)).as_str().unwrap()).unwrap();
-    let response_id = U256::from_str(store_flows::get("response_id").unwrap_or(json!(0)).as_str().unwrap()).unwrap();
+    let request_id = U256::from_str(store_flows::get("request_id").unwrap_or(json!("0")).as_str().unwrap()).unwrap();
+    let response_id = U256::from_str(store_flows::get("response_id").unwrap_or(json!("0")).as_str().unwrap()).unwrap();
     (quantity, exchange_quantity, profit_spread, last_block_number,
     request_list, base, quote, min_base_quantity, max_base_quantity,
     min_quote_quantity, max_quote_quantity, cooling_time, last_time,
@@ -118,7 +125,7 @@ fn store_state(last_block_number: Option<U256>, request_list: Option<Vec<U256>>,
 fn lock(name: &str) -> bool {
     let lock_name = format!("{}_{}", name, "lock");
     let is_lock = store_flows::get(&lock_name).unwrap_or(json!(false)).as_bool().unwrap();
-    if is_lock {
+    if !is_lock {
         store_flows::set(&lock_name, json!(true), None);
         return true;
     }
@@ -128,6 +135,17 @@ fn lock(name: &str) -> bool {
 fn unlock(name: &str) {
     let lock_name = format!("{}_{}", name, "lock");
     store_flows::set(&lock_name, json!(false), None);
+}
+
+async fn reset_state(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, _body: Vec<u8>) {
+    store_flows::set("last_block_number", json!("0"), None);
+    store_flows::set("request_list", json!([]), None);
+    store_flows::set("last_time", json!(0), None);
+    store_flows::set("response_id", json!(0), None);
+    store_flows::set("request_id", json!(0), None);
+    store_flows::set("is_lock", json!(false), None);
+    store_flows::set("trigger_lock", json!(false), None);
+    store_flows::set("random_lock", json!(false), None);
 }
 
 async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, _body: Vec<u8>){
