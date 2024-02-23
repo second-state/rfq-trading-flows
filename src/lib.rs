@@ -71,7 +71,7 @@ fn init_rpc(_qry: &HashMap<String, Value>) -> (String, u64, String, LocalWallet)
 fn init_variable() -> (U256, U256, U256, U256, Vec<U256>, String, String, u128, u128, u128, u128, U256, U256, bool, U256, U256) {
     let quantity = std::env::var("QUANTITY").unwrap_or("100".to_string()).parse::<U256>().unwrap();
     let exchange_quantity = std::env::var("EXCHANGE_QUANTITY").unwrap_or("99".to_string()).parse::<U256>().unwrap();
-    let profix_spread = std::env::var("PROFIX_SPREAD").unwrap_or("1".to_string()).parse::<U256>().unwrap();
+    let profit_spread = std::env::var("PROFIT_SPREAD").unwrap_or("1".to_string()).parse::<U256>().unwrap();
     let last_block_number = U256::from_str(store_flows::get("last_block_number").unwrap_or(json!(0)).as_str().unwrap()).unwrap();
     let request_list = store_flows::get("request_list").unwrap_or(json!([])).as_array().unwrap().clone()
     .iter()
@@ -88,7 +88,7 @@ fn init_variable() -> (U256, U256, U256, U256, Vec<U256>, String, String, u128, 
     let is_lock = store_flows::get("is_lock").unwrap_or(json!(false)).as_bool().unwrap();
     let request_id = U256::from_str(store_flows::get("request_id").unwrap_or(json!(0)).as_str().unwrap()).unwrap();
     let response_id = U256::from_str(store_flows::get("response_id").unwrap_or(json!(0)).as_str().unwrap()).unwrap();
-    (quantity, exchange_quantity, profix_spread, last_block_number,
+    (quantity, exchange_quantity, profit_spread, last_block_number,
     request_list, base, quote, min_base_quantity, max_base_quantity,
     min_quote_quantity, max_quote_quantity, cooling_time, last_time,
     is_lock, request_id, response_id)
@@ -192,8 +192,8 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
 		}
 		let mut accept = false;
         // 1. quote(quantity) <-> base(exchange_quantity)
-        // 2. base(exchange_quantity) <-> quote(quantity + profix_spread)
-        // Profix = profix_spread
+        // 2. base(exchange_quantity) <-> quote(quantity + profit_spread)
+        // Profix = profit_spread
 		if token_out == quote && token_in == base {
 			if amount_in >= exchange_quantity {
 				accept = true;
