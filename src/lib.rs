@@ -95,6 +95,11 @@ fn init_variable() -> (U256, U256, U256, U256, Vec<U256>, String, String, u128, 
     let is_lock = store_flows::get("is_lock").unwrap_or(json!(false)).as_bool().unwrap();
     let request_id = U256::from_str(store_flows::get("request_id").unwrap_or(json!("0")).as_str().unwrap()).unwrap();
     let response_id = U256::from_str(store_flows::get("response_id").unwrap_or(json!("0")).as_str().unwrap()).unwrap();
+    log::info!("State -- {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}",
+     quantity, exchange_quantity, profit_spread, last_block_number,
+        request_list, base, quote, min_base_quantity, max_base_quantity,
+        min_quote_quantity, max_quote_quantity, cooling_time, last_time,
+        is_lock, request_id, response_id);
     (quantity, exchange_quantity, profit_spread, last_block_number,
     request_list, base, quote, min_base_quantity, max_base_quantity,
     min_quote_quantity, max_quote_quantity, cooling_time, last_time,
@@ -203,7 +208,6 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
         let now = request.get(0).unwrap();
 		let token_out = format!("0x{}", &now["data"].as_str().unwrap()[26..66]);
 		let token_in = format!("0x{}", &now["data"].as_str().unwrap()[90..130]);
-		// let amount_out = U256::from_str(&now["data"].as_str().unwrap()[131..194]).unwrap();
 		let expire_time = U256::from_str(&now["data"].as_str().unwrap()[195..258]).unwrap();
 		if expire_time < now_time {
 			continue;
@@ -271,7 +275,9 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
             }
         }
     }
-    
+
+    log::info!("Store -- {} {:?}", now_block_number, request_list);
+
     store_state(Some(now_block_number), Some(request_list), None, None, None, None);
 
     send_response(
@@ -387,6 +393,7 @@ async fn random_response(_headers: Vec<(String, String)>, _qry: HashMap<String, 
     .as_secs()
     .into();
 
+    log::info!("Store -- {} {} {} {}", now_time, response_id, request_id, is_lock);
     store_state(None, None, Some(now_time), Some(response_id), Some(request_id), Some(is_lock));
 
     send_response(
