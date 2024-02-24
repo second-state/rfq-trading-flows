@@ -258,6 +258,7 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
     loop {
         let balance_of_params = vec![Token::Address(wallet.address().into())];
         let balance = U256::from_str(call_function(&rpc_node_url, "balanceOf", balance_of_params, &quote).await.unwrap().as_str()).unwrap();
+        log::info!("Balance -- {}", balance);
         if balance < quantity {
             break;
         }
@@ -318,7 +319,7 @@ async fn random_response(_headers: Vec<(String, String)>, _qry: HashMap<String, 
         return;
     }
     // withdraw old response
-    let response_log = get_log(&rpc_node_url, &contract_address, json!(["0x04a02541703318cd8f9e95f53f8a3e93327acfef4a41ba01dfd2bdd5623cfb6a", response_id.to_string().as_str(), request_id.to_string().as_str()]),).await.unwrap();
+    let response_log = get_log(&rpc_node_url, &contract_address, json!(["0x04a02541703318cd8f9e95f53f8a3e93327acfef4a41ba01dfd2bdd5623cfb6a", response_id.encode_hex(), request_id.encode_hex()]),).await.unwrap();
     if is_lock {
         if let Some(now_request) = response_log.get(0) {
             let buyer = format!("0x{}", &now_request["data"].as_str().unwrap()[26..66]);
