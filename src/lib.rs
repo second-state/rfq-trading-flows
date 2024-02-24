@@ -76,10 +76,10 @@ fn init_rpc(_qry: &HashMap<String, Value>) -> (String, u64, String, LocalWallet)
 }
 
 fn init_variable() -> (U256, U256, U256, U256, Vec<U256>, String, String, u128, u128, u128, u128, U256, U256, bool, U256, U256) {
-    let quantity = std::env::var("QUANTITY").unwrap_or("100".to_string()).parse::<U256>().unwrap();
-    let exchange_quantity = std::env::var("EXCHANGE_QUANTITY").unwrap_or("99".to_string()).parse::<U256>().unwrap();
-    let profit_spread = std::env::var("PROFIT_SPREAD").unwrap_or("1".to_string()).parse::<U256>().unwrap();
-    let last_block_number = U256::from_str(store_flows::get("last_block_number").unwrap_or(json!("0")).as_str().unwrap()).unwrap();
+    let quantity = U256::from_dec_str(std::env::var("QUANTITY").unwrap_or("100".to_string()).as_str()).unwrap();
+    let exchange_quantity = U256::from_dec_str(std::env::var("EXCHANGE_QUANTITY").unwrap_or("99".to_string()).as_str()).unwrap();
+    let profit_spread = U256::from_dec_str(std::env::var("PROFIT_SPREAD").unwrap_or("1".to_string()).as_str()).unwrap();
+    let last_block_number = U256::from_str(store_flows::get("last_block_number").unwrap_or(json!("0x0")).as_str().unwrap()).unwrap();
     let request_list = store_flows::get("request_list").unwrap_or(json!([])).as_array().unwrap().clone()
     .iter()
     .map(|value| U256::from_str(value.as_str().unwrap()).unwrap())
@@ -91,15 +91,16 @@ fn init_variable() -> (U256, U256, U256, U256, Vec<U256>, String, String, u128, 
     let min_quote_quantity = std::env::var("MIN_QUOTE_QUANTITY").unwrap_or("98".to_string()).parse::<u128>().unwrap();
     let max_quote_quantity = std::env::var("MAX_QUOTE_QUANTITY").unwrap_or("102".to_string()).parse::<u128>().unwrap();
     let cooling_time = U256::from_dec_str(std::env::var("COOLING_TIME").unwrap_or("300".to_string()).as_str()).unwrap();
-    let last_time = U256::from_str(store_flows::get("last_time").unwrap_or(Value::from("0")).as_str().unwrap()).unwrap();
+    let last_time = U256::from_str(store_flows::get("last_time").unwrap_or(Value::from("0x0")).as_str().unwrap()).unwrap();
     let is_lock = store_flows::get("is_lock").unwrap_or(json!(false)).as_bool().unwrap();
-    let request_id = U256::from_str(store_flows::get("request_id").unwrap_or(json!("0")).as_str().unwrap()).unwrap();
-    let response_id = U256::from_str(store_flows::get("response_id").unwrap_or(json!("0")).as_str().unwrap()).unwrap();
+    let request_id = U256::from_str(store_flows::get("request_id").unwrap_or(json!("0x0")).as_str().unwrap()).unwrap();
+    let response_id = U256::from_str(store_flows::get("response_id").unwrap_or(json!("0x0")).as_str().unwrap()).unwrap();
     log::info!("State -- {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}",
      quantity, exchange_quantity, profit_spread, last_block_number,
         request_list, base, quote, min_base_quantity, max_base_quantity,
         min_quote_quantity, max_quote_quantity, cooling_time, last_time,
         is_lock, request_id, response_id);
+
     (quantity, exchange_quantity, profit_spread, last_block_number,
     request_list, base, quote, min_base_quantity, max_base_quantity,
     min_quote_quantity, max_quote_quantity, cooling_time, last_time,
@@ -131,7 +132,10 @@ fn lock(name: &str) -> bool {
     let lock_name = format!("{}_{}", name, "lock");
     let is_lock = store_flows::get(&lock_name).unwrap_or(json!(false)).as_bool().unwrap();
     if !is_lock {
-        store_flows::set(&lock_name, json!(true), None);
+        store_flows::set(&lock_name, json!(true), Some(store_flows::Expire {
+            kind: store_flows::ExpireKind::Ex,
+            value: 300,
+        }));
         return true;
     }
     false
@@ -143,11 +147,11 @@ fn unlock(name: &str) {
 }
 
 async fn reset_state(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, _body: Vec<u8>) {
-    store_flows::set("last_block_number", json!("0"), None);
+    store_flows::set("last_block_number", json!("0x0"), None);
     store_flows::set("request_list", json!([]), None);
-    store_flows::set("last_time", json!(0), None);
-    store_flows::set("response_id", json!(0), None);
-    store_flows::set("request_id", json!(0), None);
+    store_flows::set("last_time", json!("0x0"), None);
+    store_flows::set("response_id", json!("0x0"), None);
+    store_flows::set("request_id", json!("0x0"), None);
     store_flows::set("is_lock", json!(false), None);
     store_flows::set("trigger_lock", json!(false), None);
     store_flows::set("random_lock", json!(false), None);
