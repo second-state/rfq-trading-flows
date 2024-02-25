@@ -80,7 +80,7 @@ fn init_variable() -> (U256, U256, U256, U256, Vec<U256>, String, String, u128, 
     let exchange_quantity = U256::from_dec_str(std::env::var("EXCHANGE_QUANTITY").unwrap_or("99".to_string()).as_str()).unwrap();
     let profit_spread = U256::from_dec_str(std::env::var("PROFIT_SPREAD").unwrap_or("1".to_string()).as_str()).unwrap();
     let last_block_number = U256::from_str(store_flows::get("last_block_number").unwrap_or(json!("0x0")).as_str().unwrap()).unwrap();
-    let request_list = store_flows::get("request_list").unwrap_or(json!([])).as_array().unwrap().clone()
+    let request_list = store_flows::get("request_list").unwrap_or(json!([])).as_array().unwrap().clone() // Storing bot created request
     .iter()
     .map(|value| U256::from_str(value.as_str().unwrap()).unwrap())
     .collect::<Vec<U256>>();
@@ -92,9 +92,9 @@ fn init_variable() -> (U256, U256, U256, U256, Vec<U256>, String, String, u128, 
     let max_quote_quantity = std::env::var("MAX_QUOTE_QUANTITY").unwrap_or("102".to_string()).parse::<u128>().unwrap();
     let cooling_time = U256::from_dec_str(std::env::var("COOLING_TIME").unwrap_or("300".to_string()).as_str()).unwrap();
     let last_time = U256::from_str(store_flows::get("last_time").unwrap_or(Value::from("0x0")).as_str().unwrap()).unwrap();
-    let is_lock = store_flows::get("is_lock").unwrap_or(json!(false)).as_bool().unwrap();
-    let request_id = U256::from_str(store_flows::get("request_id").unwrap_or(json!("0x0")).as_str().unwrap()).unwrap();
-    let response_id = U256::from_str(store_flows::get("response_id").unwrap_or(json!("0x0")).as_str().unwrap()).unwrap();
+    let is_lock = store_flows::get("is_lock").unwrap_or(json!(false)).as_bool().unwrap(); // if bot responded any request
+    let request_id = U256::from_str(store_flows::get("request_id").unwrap_or(json!("0x0")).as_str().unwrap()).unwrap(); // Storing bot last responded request id
+    let response_id = U256::from_str(store_flows::get("response_id").unwrap_or(json!("0x0")).as_str().unwrap()).unwrap(); // Storing bot last responded response id
     log::info!("State -- {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}, {:#?}",
      quantity, exchange_quantity, profit_spread, last_block_number,
         request_list, base, quote, min_base_quantity, max_base_quantity,
@@ -195,14 +195,15 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
 		// let buyer = format!("0x{}", &now["data"].as_str().unwrap()[26..66]);
 		let request_id = U256::from_str(&(now["topics"][2].to_string()).trim_matches('"')[2..]).unwrap();
 		let amount_in = U256::from_str(&now["data"].as_str().unwrap()[90..130]).unwrap();
-		let expire_time = U256::from_str(&now["data"].as_str().unwrap()[131..194]).unwrap();
-		if expire_time < now_time {
+		let response_expire_time = U256::from_str(&now["data"].as_str().unwrap()[131..194]).unwrap();
+		if response_expire_time < now_time {
 			continue;
 		}
+        // Check if the request is create by the bot
 		while request_idx < request_list.len() && request_id > request_list[request_idx] {
 			request_idx += 1;
 		}
-		if request_idx == request_list.len(){
+		if request_idx >= request_list.len(){
 			break;
 		}
 		let request = get_log(&rpc_node_url, &contract_address, 
@@ -212,8 +213,11 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
         let now = request.get(0).unwrap();
 		let token_out = format!("0x{}", &now["data"].as_str().unwrap()[26..66]);
 		let token_in = format!("0x{}", &now["data"].as_str().unwrap()[90..130]);
-		let expire_time = U256::from_str(&now["data"].as_str().unwrap()[195..258]).unwrap();
-		if expire_time < now_time {
+		let request_expire_time = U256::from_str(&now["data"].as_str().unwrap()[195..258]).unwrap();
+		if request_expire_time < now_time {
+            request_list.remove(request_idx);
+            let withdraw_params = vec![Token::Uint(request_id.into())];
+			let _ = call_function_and_wait(&rpc_node_url, chain_id, wallet.clone(), "withdraw", withdraw_params, &contract_address).await;
 			continue;
 		}
 		let mut accept = false;
