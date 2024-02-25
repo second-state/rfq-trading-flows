@@ -1,0 +1,208 @@
+2/24/2024, 10:50:40 PM
+
+{ "level": "INFO", "message": "Store -- 2195742 [40]", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:50:40 PM
+
+{ "level": "INFO", "message": "Balance -- 17", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:50:35 PM
+
+{ "level": "INFO", "message": "Tx: Legacy(\n TransactionRequest {\n from: Some(\n 0x70655c1c0d7ef1273d17e5610a2079e7465f0ff6,\n ),\n to: Some(\n Address(\n 0x08023b21c77618e732a4440713bef4b585b777f1,\n ),\n ),\n gas: Some(\n 211815,\n ),\n gas_price: Some(\n 1000000000,\n ),\n value: Some(\n 0,\n ),\n data: Some(\n Bytes(0x44612f2400000000000000000000000030d30c71d8618ce42783edd2c7ae6f15eed69fec000000000000000000000000948fa9010efbeed5f4943893a383b7e2210ba14500000000000000000000000000000000000000000000000000000000000000630000000000000000000000000000000000000000000000000000000000000000),\n ),\n nonce: Some(\n 274,\n ),\n chain_id: Some(\n 18,\n ),\n },\n)", "target": "rfq_trading_bot::ether_lib" }
+
+2/24/2024, 10:50:23 PM
+
+{ "level": "INFO", "message": "Tx: Legacy(\n TransactionRequest {\n from: Some(\n 0x70655c1c0d7ef1273d17e5610a2079e7465f0ff6,\n ),\n to: Some(\n Address(\n 0x30d30c71d8618ce42783edd2c7ae6f15eed69fec,\n ),\n ),\n gas: Some(\n 56352,\n ),\n gas_price: Some(\n 1000000000,\n ),\n value: Some(\n 0,\n ),\n data: Some(\n Bytes(0x095ea7b300000000000000000000000008023b21c77618e732a4440713bef4b585b777f10000000000000000000000000000000000000000000000000000000000000063),\n ),\n nonce: Some(\n 273,\n ),\n chain_id: Some(\n 18,\n ),\n },\n)", "target": "rfq_trading_bot::ether_lib" }
+
+2/24/2024, 10:50:22 PM
+
+{ "level": "INFO", "message": "Balance -- 116", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:50:17 PM
+
+{ "level": "INFO", "message": "Tx: Legacy(\n TransactionRequest {\n from: Some(\n 0x70655c1c0d7ef1273d17e5610a2079e7465f0ff6,\n ),\n to: Some(\n Address(\n 0x08023b21c77618e732a4440713bef4b585b777f1,\n ),\n ),\n gas: Some(\n 76938,\n ),\n gas_price: Some(\n 1000000000,\n ),\n value: Some(\n 0,\n ),\n data: Some(\n Bytes(0x2e1a7d4d0000000000000000000000000000000000000000000000000000000000000027),\n ),\n nonce: Some(\n 272,\n ),\n chain_id: Some(\n 18,\n ),\n },\n)", "target": "rfq_trading_bot::ether_lib" }
+
+2/24/2024, 10:50:05 PM
+
+{ "level": "INFO", "message": "Tx: Legacy(\n TransactionRequest {\n from: Some(\n 0x70655c1c0d7ef1273d17e5610a2079e7465f0ff6,\n ),\n to: Some(\n Address(\n 0x08023b21c77618e732a4440713bef4b585b777f1,\n ),\n ),\n gas: Some(\n 66524,\n ),\n gas_price: Some(\n 1000000000,\n ),\n value: Some(\n 0,\n ),\n data: Some(\n Bytes(0x02e9d5e400000000000000000000000000000000000000000000000000000000000000270000000000000000000000000000000000000000000000000000000000000000),\n ),\n nonce: Some(\n 271,\n ),\n chain_id: Some(\n 18,\n ),\n },\n)", "target": "rfq_trading_bot::ether_lib" }
+
+2/24/2024, 10:50:04 PM
+
+{ "level": "INFO", "message": "State -- 99, 100, 1, 2195732, [\n 39,\n], \"0x948fa9010efbeed5f4943893a383b7e2210ba145\", \"0x30d30c71d8618ce42783edd2c7ae6f15eed69fec\", 98, 102, 98, 102, 300, 0, false, 0, 0", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:49:04 PM
+
+{ "level": "INFO", "message": "Store -- 2195732 [39]", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:49:04 PM
+
+{ "level": "INFO", "message": "Balance -- 16", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:49:04 PM
+
+{ "level": "INFO", "message": "State -- 99, 100, 1, 2195722, [\n 39,\n], \"0x948fa9010efbeed5f4943893a383b7e2210ba145\", \"0x30d30c71d8618ce42783edd2c7ae6f15eed69fec\", 98, 102, 98, 102, 300, 0, false, 0, 0", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:48:46 PM
+
+{ "level": "INFO", "message": "Store -- 2195722 [39]", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:48:46 PM
+
+{ "level": "INFO", "message": "Balance -- 16", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:48:35 PM
+
+{ "level": "INFO", "message": "Tx: Legacy(\n TransactionRequest {\n from: Some(\n 0x70655c1c0d7ef1273d17e5610a2079e7465f0ff6,\n ),\n to: Some(\n Address(\n 0x08023b21c77618e732a4440713bef4b585b777f1,\n ),\n ),\n gas: Some(\n 211815,\n ),\n gas_price: Some(\n 1000000000,\n ),\n value: Some(\n 0,\n ),\n data: Some(\n Bytes(0x44612f24000000000000000000000000948fa9010efbeed5f4943893a383b7e2210ba14500000000000000000000000030d30c71d8618ce42783edd2c7ae6f15eed69fec00000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000000),\n ),\n nonce: Some(\n 270,\n ),\n chain_id: Some(\n 18,\n ),\n },\n)", "target": "rfq_trading_bot::ether_lib" }
+
+2/24/2024, 10:48:29 PM
+
+{ "level": "INFO", "message": "Tx: Legacy(\n TransactionRequest {\n from: Some(\n 0x70655c1c0d7ef1273d17e5610a2079e7465f0ff6,\n ),\n to: Some(\n Address(\n 0x948fa9010efbeed5f4943893a383b7e2210ba145,\n ),\n ),\n gas: Some(\n 56352,\n ),\n gas_price: Some(\n 1000000000,\n ),\n value: Some(\n 0,\n ),\n data: Some(\n Bytes(0x095ea7b300000000000000000000000008023b21c77618e732a4440713bef4b585b777f10000000000000000000000000000000000000000000000000000000000000064),\n ),\n nonce: Some(\n 269,\n ),\n chain_id: Some(\n 18,\n ),\n },\n)", "target": "rfq_trading_bot::ether_lib" }
+
+2/24/2024, 10:48:22 PM
+
+{ "level": "INFO", "message": "Tx: Legacy(\n TransactionRequest {\n from: Some(\n 0x70655c1c0d7ef1273d17e5610a2079e7465f0ff6,\n ),\n to: Some(\n Address(\n 0x08023b21c77618e732a4440713bef4b585b777f1,\n ),\n ),\n gas: Some(\n 66753,\n ),\n gas_price: Some(\n 1000000000,\n ),\n value: Some(\n 0,\n ),\n data: Some(\n Bytes(0x2e1a7d4d0000000000000000000000000000000000000000000000000000000000000026),\n ),\n nonce: Some(\n 268,\n ),\n chain_id: Some(\n 18,\n ),\n },\n)", "target": "rfq_trading_bot::ether_lib" }
+
+2/24/2024, 10:48:16 PM
+
+{ "level": "INFO", "message": "Tx: Legacy(\n TransactionRequest {\n from: Some(\n 0x70655c1c0d7ef1273d17e5610a2079e7465f0ff6,\n ),\n to: Some(\n Address(\n 0x08023b21c77618e732a4440713bef4b585b777f1,\n ),\n ),\n gas: Some(\n 76938,\n ),\n gas_price: Some(\n 1000000000,\n ),\n value: Some(\n 0,\n ),\n data: Some(\n Bytes(0x2e1a7d4d0000000000000000000000000000000000000000000000000000000000000026),\n ),\n nonce: Some(\n 267,\n ),\n chain_id: Some(\n 18,\n ),\n },\n)", "target": "rfq_trading_bot::ether_lib" }
+
+2/24/2024, 10:48:05 PM
+
+{ "level": "INFO", "message": "Tx: Legacy(\n TransactionRequest {\n from: Some(\n 0x70655c1c0d7ef1273d17e5610a2079e7465f0ff6,\n ),\n to: Some(\n Address(\n 0x08023b21c77618e732a4440713bef4b585b777f1,\n ),\n ),\n gas: Some(\n 90320,\n ),\n gas_price: Some(\n 1000000000,\n ),\n value: Some(\n 0,\n ),\n data: Some(\n Bytes(0x02e9d5e400000000000000000000000000000000000000000000000000000000000000260000000000000000000000000000000000000000000000000000000000000002),\n ),\n nonce: Some(\n 266,\n ),\n chain_id: Some(\n 18,\n ),\n },\n)", "target": "rfq_trading_bot::ether_lib" }
+
+2/24/2024, 10:48:04 PM
+
+{ "level": "INFO", "message": "State -- 99, 100, 1, 2195712, [\n 38,\n], \"0x948fa9010efbeed5f4943893a383b7e2210ba145\", \"0x30d30c71d8618ce42783edd2c7ae6f15eed69fec\", 98, 102, 98, 102, 300, 0, false, 0, 0", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:47:04 PM
+
+{ "level": "INFO", "message": "Store -- 2195712 [38]", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:47:04 PM
+
+{ "level": "INFO", "message": "Balance -- 16", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:47:04 PM
+
+{ "level": "INFO", "message": "State -- 99, 100, 1, 2195702, [\n 38,\n], \"0x948fa9010efbeed5f4943893a383b7e2210ba145\", \"0x30d30c71d8618ce42783edd2c7ae6f15eed69fec\", 98, 102, 98, 102, 300, 0, false, 0, 0", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:46:04 PM
+
+{ "level": "INFO", "message": "Store -- 2195702 [38]", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:46:04 PM
+
+{ "level": "INFO", "message": "Balance -- 16", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:46:04 PM
+
+{ "level": "INFO", "message": "State -- 99, 100, 1, 2195692, [\n 38,\n], \"0x948fa9010efbeed5f4943893a383b7e2210ba145\", \"0x30d30c71d8618ce42783edd2c7ae6f15eed69fec\", 98, 102, 98, 102, 300, 0, false, 0, 0", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:45:05 PM
+
+{ "level": "INFO", "message": "Store -- 2195692 [38]", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:45:05 PM
+
+{ "level": "INFO", "message": "Balance -- 16", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:45:04 PM
+
+{ "level": "INFO", "message": "State -- 99, 100, 1, 2195682, [\n 38,\n], \"0x948fa9010efbeed5f4943893a383b7e2210ba145\", \"0x30d30c71d8618ce42783edd2c7ae6f15eed69fec\", 98, 102, 98, 102, 300, 0, false, 0, 0", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:44:05 PM
+
+{ "level": "INFO", "message": "Store -- 2195682 [38]", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:44:05 PM
+
+{ "level": "INFO", "message": "Balance -- 16", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:44:05 PM
+
+{ "level": "INFO", "message": "State -- 99, 100, 1, 2195672, [\n 38,\n], \"0x948fa9010efbeed5f4943893a383b7e2210ba145\", \"0x30d30c71d8618ce42783edd2c7ae6f15eed69fec\", 98, 102, 98, 102, 300, 0, false, 0, 0", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:43:05 PM
+
+{ "level": "INFO", "message": "Store -- 2195672 [38]", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:43:05 PM
+
+{ "level": "INFO", "message": "Balance -- 16", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:43:04 PM
+
+{ "level": "INFO", "message": "State -- 99, 100, 1, 2195662, [\n 38,\n], \"0x948fa9010efbeed5f4943893a383b7e2210ba145\", \"0x30d30c71d8618ce42783edd2c7ae6f15eed69fec\", 98, 102, 98, 102, 300, 0, false, 0, 0", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:42:35 PM
+
+{ "level": "INFO", "message": "Store -- 2195662 [38]", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:42:35 PM
+
+{ "level": "INFO", "message": "Balance -- 16", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:42:23 PM
+
+{ "level": "INFO", "message": "Tx: Legacy(\n TransactionRequest {\n from: Some(\n 0x70655c1c0d7ef1273d17e5610a2079e7465f0ff6,\n ),\n to: Some(\n Address(\n 0x08023b21c77618e732a4440713bef4b585b777f1,\n ),\n ),\n gas: Some(\n 211815,\n ),\n gas_price: Some(\n 1000000000,\n ),\n value: Some(\n 0,\n ),\n data: Some(\n Bytes(0x44612f2400000000000000000000000030d30c71d8618ce42783edd2c7ae6f15eed69fec000000000000000000000000948fa9010efbeed5f4943893a383b7e2210ba14500000000000000000000000000000000000000000000000000000000000000630000000000000000000000000000000000000000000000000000000000000000),\n ),\n nonce: Some(\n 265,\n ),\n chain_id: Some(\n 18,\n ),\n },\n)", "target": "rfq_trading_bot::ether_lib" }
+
+2/24/2024, 10:42:17 PM
+
+{ "level": "INFO", "message": "Tx: Legacy(\n TransactionRequest {\n from: Some(\n 0x70655c1c0d7ef1273d17e5610a2079e7465f0ff6,\n ),\n to: Some(\n Address(\n 0x30d30c71d8618ce42783edd2c7ae6f15eed69fec,\n ),\n ),\n gas: Some(\n 56352,\n ),\n gas_price: Some(\n 1000000000,\n ),\n value: Some(\n 0,\n ),\n data: Some(\n Bytes(0x095ea7b300000000000000000000000008023b21c77618e732a4440713bef4b585b777f10000000000000000000000000000000000000000000000000000000000000063),\n ),\n nonce: Some(\n 264,\n ),\n chain_id: Some(\n 18,\n ),\n },\n)", "target": "rfq_trading_bot::ether_lib" }
+
+2/24/2024, 10:42:16 PM
+
+{ "level": "INFO", "message": "Balance -- 115", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:42:10 PM
+
+{ "level": "INFO", "message": "Tx: Legacy(\n TransactionRequest {\n from: Some(\n 0x70655c1c0d7ef1273d17e5610a2079e7465f0ff6,\n ),\n to: Some(\n Address(\n 0x08023b21c77618e732a4440713bef4b585b777f1,\n ),\n ),\n gas: Some(\n 76938,\n ),\n gas_price: Some(\n 1000000000,\n ),\n value: Some(\n 0,\n ),\n data: Some(\n Bytes(0x2e1a7d4d0000000000000000000000000000000000000000000000000000000000000025),\n ),\n nonce: Some(\n 263,\n ),\n chain_id: Some(\n 18,\n ),\n },\n)", "target": "rfq_trading_bot::ether_lib" }
+
+2/24/2024, 10:42:05 PM
+
+{ "level": "INFO", "message": "Tx: Legacy(\n TransactionRequest {\n from: Some(\n 0x70655c1c0d7ef1273d17e5610a2079e7465f0ff6,\n ),\n to: Some(\n Address(\n 0x08023b21c77618e732a4440713bef4b585b777f1,\n ),\n ),\n gas: Some(\n 90320,\n ),\n gas_price: Some(\n 1000000000,\n ),\n value: Some(\n 0,\n ),\n data: Some(\n Bytes(0x02e9d5e400000000000000000000000000000000000000000000000000000000000000250000000000000000000000000000000000000000000000000000000000000001),\n ),\n nonce: Some(\n 262,\n ),\n chain_id: Some(\n 18,\n ),\n },\n)", "target": "rfq_trading_bot::ether_lib" }
+
+2/24/2024, 10:42:04 PM
+
+{ "level": "INFO", "message": "State -- 99, 100, 1, 2195652, [\n 37,\n], \"0x948fa9010efbeed5f4943893a383b7e2210ba145\", \"0x30d30c71d8618ce42783edd2c7ae6f15eed69fec\", 98, 102, 98, 102, 300, 0, false, 0, 0", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:41:05 PM
+
+{ "level": "INFO", "message": "Store -- 2195652 [37]", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:41:05 PM
+
+{ "level": "INFO", "message": "Balance -- 15", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:41:04 PM
+
+{ "level": "INFO", "message": "State -- 99, 100, 1, 2195642, [\n 37,\n], \"0x948fa9010efbeed5f4943893a383b7e2210ba145\", \"0x30d30c71d8618ce42783edd2c7ae6f15eed69fec\", 98, 102, 98, 102, 300, 0, false, 0, 0", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:40:05 PM
+
+{ "level": "INFO", "message": "Store -- 2195642 [37]", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:40:05 PM
+
+{ "level": "INFO", "message": "Balance -- 15", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:40:04 PM
+
+{ "level": "INFO", "message": "State -- 99, 100, 1, 2195632, [\n 37,\n], \"0x948fa9010efbeed5f4943893a383b7e2210ba145\", \"0x30d30c71d8618ce42783edd2c7ae6f15eed69fec\", 98, 102, 98, 102, 300, 0, false, 0, 0", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:39:05 PM
+
+{ "level": "INFO", "message": "Store -- 2195632 [37]", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:39:05 PM
+
+{ "level": "INFO", "message": "Balance -- 15", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:39:04 PM
+
+{ "level": "INFO", "message": "State -- 99, 100, 1, 2195622, [\n 37,\n], \"0x948fa9010efbeed5f4943893a383b7e2210ba145\", \"0x30d30c71d8618ce42783edd2c7ae6f15eed69fec\", 98, 102, 98, 102, 300, 0, false, 0, 0", "target": "rfq_trading_bot" }
+
+2/24/2024, 10:38:04 PM
+
+{ "level": "INFO", "message": "Store -- 2195622 [37]", "target": "rfq_trading_bot" }
+
